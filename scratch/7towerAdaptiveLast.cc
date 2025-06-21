@@ -356,16 +356,29 @@ main (int argc, char *argv[])
   // Добавление интерфейса X2 между базовыми станциями (без него хендовер не будет работать)
   lteHelper->AddX2Interface (enbNodes);
   // Включение трейсов (логирование KPI в файл) и задание интервала снятия показаний
-  lteHelper->EnableTraces ();
-  Ptr<RadioBearerStatsCalculator> rlcStats = lteHelper->GetRlcStats ();
-  rlcStats->SetAttribute ("EpochDuration", TimeValue (Seconds (0.05)));
-  Ptr<RadioBearerStatsCalculator> pdcpStats = lteHelper->GetPdcpStats ();
-  pdcpStats->SetAttribute ("EpochDuration", TimeValue (Seconds (0.05)));
+  //lteHelper->EnableTraces ();
+  //lteHelper->EnablePhyTraces ();
+  //LteHelper->EnableDlPhyTraces()
+  //LteHelper->EnablePhyTraces()
+  //LteHelper->EnableMacTraces()
+  
+  lteHelper->EnablePhyTraces ();
+  lteHelper->EnableMacTraces ();
+  lteHelper->EnableRlcTraces ();
+  lteHelper->EnablePdcpTraces ();
+
+
+
+
+  //Ptr<RadioBearerStatsCalculator> rlcStats = lteHelper->GetRlcStats ();
+  //rlcStats->SetAttribute ("EpochDuration", TimeValue (Seconds (0.05)));
+  //Ptr<RadioBearerStatsCalculator> pdcpStats = lteHelper->GetPdcpStats ();
+  //pdcpStats->SetAttribute ("EpochDuration", TimeValue (Seconds (0.05)));
 
   // Отслеживание приёма пакетов пользователями
-  std::ostringstream oss;
-  oss << "/NodeList/" << ueNodes.Get (0)->GetId () << "/ApplicationList/0/$ns3::PacketSink/Rx";
-  Config::ConnectWithoutContext (oss.str (), MakeCallback (&ReceivePacket));
+  //std::ostringstream oss;
+  //oss << "/NodeList/" << ueNodes.Get (0)->GetId () << "/ApplicationList/0/$ns3::PacketSink/Rx";
+  //Config::ConnectWithoutContext (oss.str (), MakeCallback (&ReceivePacket));
 
   // Логирование пропускной способности в файл
   bool firstWrite = true;
