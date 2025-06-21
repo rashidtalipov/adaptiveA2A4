@@ -113,8 +113,15 @@ main (int argc, char *argv[])
   bool enableNsLogs = true;
 
   // Опции командной строки в данной модели не используются. Необходимо для работы Визуализатора
+  uint32_t rngSeed = 2;
+  uint32_t rngRun  = 2;
   CommandLine cmd;
   cmd.Parse (argc, argv);
+
+  // Устанавливаем «зерно» и «прогон» до создания любых объектов, которые могут
+  // спросить генератор случайных чисел:
+  RngSeedManager::SetSeed (rngSeed);
+  RngSeedManager::SetRun  (rngRun);
 
   // Компоненты логирования, включаются только если enableNsLogs = true
   if (enableNsLogs)
@@ -171,6 +178,8 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (true));
   Config::SetDefault ("ns3::LteUePowerControl::ClosedLoop", BooleanValue (true));
   Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (true));
+  // Config::SetDefault ("ns3::ArpL3Protocol::DropArp", BooleanValue (true));
+
 
   // Частоты
   lteHelper->SetEnbDeviceAttribute ("DlEarfcn", UintegerValue (100)); //2120MHz
@@ -254,7 +263,7 @@ main (int argc, char *argv[])
   rxMob.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
                          "Bounds", RectangleValue(Rectangle(-2000, 2000, -2000, 2000)),
                          "Distance", DoubleValue(1000.0),
-                         "Speed", StringValue("ns3::ConstantRandomVariable[Constant=370]"));
+                         "Speed", StringValue("ns3::ConstantRandomVariable[Constant=37]"));
   rxMob.SetPositionAllocator(positionAlloc2);
   rxMob.Install(ueNodes);
 
@@ -391,8 +400,7 @@ main (int argc, char *argv[])
   {
     uint8_t thr = adaptiveAlgo->GetServingCellThreshold (cellId);
     std::cout << "At t=1s cell " << cellId << " threshold=" << +thr << "\n";
-  };                  
-                    
+  };                        
                     
   // И потом вызов адаптивного обновления:
   Simulator::Schedule(Seconds(0.5), &ScheduleThresholdUpdate, adaptiveAlgo, ueNodes, Seconds(0.5));
