@@ -113,15 +113,16 @@ main (int argc, char *argv[])
   bool enableNsLogs = true;
 
   // Опции командной строки в данной модели не используются. Необходимо для работы Визуализатора
-  uint32_t rngSeed = 2;
-  uint32_t rngRun  = 2;
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
   // Устанавливаем «зерно» и «прогон» до создания любых объектов, которые могут
   // спросить генератор случайных чисел:
-  RngSeedManager::SetSeed (rngSeed);
-  RngSeedManager::SetRun  (rngRun);
+  uint32_t seed = static_cast<uint32_t>(std::time(nullptr));
+  RngSeedManager::SetSeed(seed);
+  // а потом задаём номер прогона (можно тоже по времени или циклом):
+  RngSeedManager::SetRun(seed % 100);  // например, run = seed mod 100
+
 
   // Компоненты логирования, включаются только если enableNsLogs = true
   if (enableNsLogs)
@@ -159,7 +160,6 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::LteHelper::UseIdealRrc", BooleanValue (useIdealRrc));
   Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", BooleanValue (enableCtrlErrorModel));
   Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (enableDataErrorModel));
-
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (60 * 1024));
 
   // Создание помощника LTE 
@@ -178,7 +178,6 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (true));
   Config::SetDefault ("ns3::LteUePowerControl::ClosedLoop", BooleanValue (true));
   Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (true));
-  // Config::SetDefault ("ns3::ArpL3Protocol::DropArp", BooleanValue (true));
 
 
   // Частоты
@@ -281,7 +280,7 @@ main (int argc, char *argv[])
   // Установка интернета
   internet.Install (ueNodes);
   Ipv4InterfaceContainer ueIpIfaces;
-  ueIpIfaces = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueDevs));
+  ueIpIfaces = epcHelper->AssignUeIpv4Address(ueDevs);
 
   // Изначальное подключение пользователей к ближайшей станции
   lteHelper->Attach (ueDevs);
