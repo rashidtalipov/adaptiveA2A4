@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <iomanip>
 #include "ns3/three-gpp-propagation-loss-model.h"
+#include "ns3/lte-enb-rrc.h"   
+#include "ns3/lte-handover-algorithm.h" 
 
 
 #include "../src/lte/model/adaptive-a2-a4-rsrq-handover-algorithm.h"
@@ -65,7 +67,6 @@ void ScheduleThresholdUpdate(Ptr<AdaptiveA2A4RsrqHandoverAlgorithm> algo,
 }
 
 
-
 // Начальный счётчик размера пакетов
 uint32_t ByteCounter = 0;
 uint32_t oldByteCounter = 0;
@@ -119,15 +120,15 @@ main (int argc, char *argv[])
   if (enableNsLogs)
     {
       LogLevel logLevel = (LogLevel) (LOG_PREFIX_FUNC | LOG_PREFIX_NODE | LOG_PREFIX_TIME | LOG_LEVEL_ALL);
-      LogComponentEnable ("LteUeRrc", logLevel);
+      // LogComponentEnable ("LteUeRrc", logLevel);
       // LogComponentEnable ("LteUeMac", logLevel);
       // LogComponentEnable ("LteUePhy", logLevel);
 
-      LogComponentEnable ("LteEnbRrc", logLevel);
+      // LogComponentEnable ("LteEnbRrc", logLevel);
       // LogComponentEnable ("LteEnbMac", logLevel);
       // LogComponentEnable ("LteEnbPhy", logLevel);
 
-      // LogComponentEnable ("LteHelper", logLevel);
+      LogComponentEnable ("LteHelper", logLevel);
       // LogComponentEnable ("EpcHelper", logLevel);
       // LogComponentEnable ("EpcEnbApplication", logLevel);
       // LogComponentEnable ("EpcMmeApplication", logLevel);
@@ -138,6 +139,8 @@ main (int argc, char *argv[])
       // LogComponentEnable ("LteEnbNetDevice", logLevel);
       // LogComponentEnable ("LteUeNetDevice", logLevel);
       // LogComponentEnable ("A3RsrpHandoverAlgorithm", logLevel);
+      LogComponentEnable ("AdaptiveA2A4RsrqHandoverAlgorithm", LOG_LEVEL_INFO);
+
     }
 
   // Количество пользователей и мощность сигнала от вышек
@@ -193,6 +196,11 @@ main (int argc, char *argv[])
   Ptr<AdaptiveA2A4RsrqHandoverAlgorithm> adaptiveAlgo = CreateObject<AdaptiveA2A4RsrqHandoverAlgorithm>();
   lteHelper->SetHandoverAlgorithmType("ns3::AdaptiveA2A4RsrqHandoverAlgorithm");
   //lteHelper->SetHandoverAlgorithmAttribute("ServingCellThreshold", UintegerValue(20));
+  
+  // 1) Print out the algorithm’s actual TypeId name:
+  std::cout << "*** Handover algorithm in use: "
+          << adaptiveAlgo->GetInstanceTypeId().GetName()
+          << std::endl;
 
   Ptr<Node> pgw = epcHelper->GetPgwNode ();
 
@@ -246,7 +254,7 @@ main (int argc, char *argv[])
   rxMob.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
                          "Bounds", RectangleValue(Rectangle(-2000, 2000, -2000, 2000)),
                          "Distance", DoubleValue(1000.0),
-                         "Speed", StringValue("ns3::ConstantRandomVariable[Constant=37]"));
+                         "Speed", StringValue("ns3::ConstantRandomVariable[Constant=370]"));
   rxMob.SetPositionAllocator(positionAlloc2);
   rxMob.Install(ueNodes);
 
@@ -358,7 +366,6 @@ main (int argc, char *argv[])
   Time binSize = Seconds (0.1);
   Simulator::Schedule (Seconds(0.47), &Throughput, firstWrite, binSize, fileName);
   
-  
   std::string logFile = "ue_per_enb_log.txt";
 
   // Очистим файл перед началом симуляции
@@ -372,9 +379,24 @@ main (int argc, char *argv[])
   Simulator::Schedule(Seconds(0.5),
                     &ScheduleThresholdUpdate,
                     adaptiveAlgo, ueNodes, Seconds(0.5));
+  for (uint16_t cellId = 1; cellId <= numberOfEnbs; ++cellId)
+  {
+    uint8_t thr = adaptiveAlgo->GetServingCellThreshold (cellId);
+    std::cout << "Initial threshold for cell " << cellId << ": " << +thr << "\n";
+  };
+
+  // А потом, скажем, после Scheduler’а:
+
+  for (uint16_t cellId = 1; cellId <= numberOfEnbs; ++cellId)
+  {
+    uint8_t thr = adaptiveAlgo->GetServingCellThreshold (cellId);
+    std::cout << "At t=1s cell " << cellId << " threshold=" << +thr << "\n";
+  };                  
+                    
+                    
   // И потом вызов адаптивного обновления:
   Simulator::Schedule(Seconds(0.5), &ScheduleThresholdUpdate, adaptiveAlgo, ueNodes, Seconds(0.5));
-
+  
   Simulator::Stop (Seconds (simTime));
 
   Simulator::Run ();
