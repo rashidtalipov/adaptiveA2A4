@@ -1,5 +1,5 @@
 # adaptiveA2A4
-* Изменения в следующих папках и файлах:
+Изменения в следующих папках и файлах:
 * scratch\7towerAdaptiveLast.cc
 * src\lte\CMakeLists.txt
 * src\lte\model\adaptive-a2-a4-rsrq-handover-algorithm.cc
